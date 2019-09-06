@@ -2,7 +2,6 @@ import * as eres from 'eres'
 import * as Future from 'fluture'
 import * as R from 'ramda'
 import { reduce } from 'lodash'
-import { pgsql } from './PostgreSQLConfig'
 import { FutureInstance } from 'fluture'
 import * as pg from 'pg'
 
@@ -160,10 +159,12 @@ export function createORM<T, Raw>({
   tableName,
   debug = false,
   entityMapperClass,
+  client,
 }: {
   tableName: string
   debug?: boolean
   entityMapperClass: EntityMapperClass<T, Raw>
+  client: pg.PoolClient
 }) {
   type PgResult = QueryResult<T>
 
@@ -171,7 +172,7 @@ export function createORM<T, Raw>({
     const query = generatePgInsert({ payload: values, table: tableName })
 
     return (
-      Future.tryP<never, PgResult>(() => pgsql.query(query.text, query.values))
+      Future.tryP<never, PgResult>(() => client.query(query.text, query.values))
         .map(debug ? R.tap<PgResult>(console.log) : R.identity)
         // @ts-ignore
         .map(value => new entityMapperClass(value.rows[0]))
@@ -183,7 +184,7 @@ export function createORM<T, Raw>({
 
     return (
       Future.tryP<never, PgResult>(() =>
-        pgsql.query(`select count(*) from ${tableName} ${query.length !== 0 ? `where ${query}` : ''}`),
+        client.query(`select count(*) from ${tableName} ${query.length !== 0 ? `where ${query}` : ''}`),
       )
         .map(debug ? R.tap<PgResult>(console.log) : R.identity)
         // @ts-ignore
@@ -196,7 +197,7 @@ export function createORM<T, Raw>({
     const query = `select count(*) from ${tableName} ${sql.length !== 0 ? `where ${sql}` : ''}`
 
     return (
-      Future.tryP<never, PgResult>(() => pgsql.query(query))
+      Future.tryP<never, PgResult>(() => client.query(query))
         .map(debug ? R.tap<PgResult>(console.log) : R.identity)
         // @ts-ignore
         .map(value => value.rows[0].count)
@@ -213,7 +214,7 @@ export function createORM<T, Raw>({
 
     return (
       Future.tryP<never, PgResult>(() =>
-        pgsql.query(`select * from ${tableName} ${clause.length !== 0 ? `where ${clause}` : ''}`),
+        client.query(`select * from ${tableName} ${clause.length !== 0 ? `where ${clause}` : ''}`),
       )
         .map(value => value.rows)
         // @ts-ignore
@@ -223,7 +224,7 @@ export function createORM<T, Raw>({
 
   const findWithRawQuery = (rawWhere: string) => {
     return (
-      Future.tryP<never, PgResult>(() => pgsql.query(`select * from ${tableName} where ${rawWhere}`))
+      Future.tryP<never, PgResult>(() => client.query(`select * from ${tableName} where ${rawWhere}`))
         .map(value => value.rows)
         // @ts-ignore
         .map(R.map(data => new entityMapperClass(data)))
@@ -235,7 +236,7 @@ export function createORM<T, Raw>({
 
     return (
       Future.tryP<never, PgResult>(() =>
-        pgsql.query(`select * from ${tableName} ${clause.length !== 0 ? `where ${clause}` : ''}`),
+        client.query(`select * from ${tableName} ${clause.length !== 0 ? `where ${clause}` : ''}`),
       )
         .map(value => value.rows[0] || null)
         // @ts-ignore
@@ -245,7 +246,7 @@ export function createORM<T, Raw>({
 
   const update = (clause: Payload, values: Payload) => {
     const query = generatePgCustomUpdate({ payload: values, table: tableName, clause })
-    return Future.tryP<never, PgResult>(() => pgsql.query(query.text, query.values)).map(
+    return Future.tryP<never, PgResult>(() => client.query(query.text, query.values)).map(
       // @ts-ignore
       value => new entityMapperClass(value.rows[0]) || null,
     )
@@ -281,7 +282,7 @@ export function createORM<T, Raw>({
     const paginationClause = `order by ${orderByColumn ||
       'created_at'} ${order} offset ${offset} rows fetch next ${limit} rows only`
     const [countErr, countResult] = await eres<PgResult, Error>(
-      pgsql.query(`select count(${orderByColumn || 'id'}) from ${tableName} ${whereClause}`),
+      client.query(`select count(${orderByColumn || 'id'}) from ${tableName} ${whereClause}`),
     )
 
     if (countErr) {
@@ -297,7 +298,7 @@ export function createORM<T, Raw>({
 
     // console.time('edges mapping')
     const [resultErr, result] = await eres<PgResult, Error>(
-      pgsql.query(`select * from ${tableName} ${whereClause} ${paginationClause}`),
+      client.query(`select * from ${tableName} ${whereClause} ${paginationClause}`),
     )
 
     if (resultErr) {
@@ -336,7 +337,7 @@ export function createORM<T, Raw>({
 
   const requestRaw = (query: string): FutureInstance<never, T[]> => {
     // @ts-ignore
-    return Future.tryP(() => pgsql.query(query)).pipe(mapResults)
+    return Future.tryP(() => client.query(query)).pipe(mapResults)
   }
 
   return {
