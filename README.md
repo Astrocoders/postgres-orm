@@ -5,7 +5,7 @@
 
 ### Usage
 
-Create a postgresconfig.js file in the root directory of your project. For example:
+Create a postgresconfig.js file in the root directory of your node project. For example:
 
 ```js
 require('dotenv').config()
