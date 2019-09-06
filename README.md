@@ -5,19 +5,8 @@
 
 ### Usage
 
-Create a postgresconfig.js file in the root directory of your node project. For example:
-
 ```js
-require('dotenv').config()
+import PostgreSQLORM from '@Astrocoders/postgres-orm'
 
-module.exports = {
-  host: process.env.PG_HOST,
-  port: Number(process.env.PG_PORT),
-  user: process.env.PG_USER,
-  database: process.env.PG_DATABASE,
-  password: process.env.PG_PASSWORD,
-  databaseConfigFolder: 'pgSql',
-}
+const orm = createORM({ entityMapperClass, tableName, debug, client: pool, })
 ```
-
-So you can use `import PostgreSQLORM from '@Astrocoders/postgres-orm'`
