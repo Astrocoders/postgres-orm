@@ -14,9 +14,9 @@ export const sanitizePayload = payload =>
     (acc, key) =>
       payload[key] !== undefined
         ? {
-          ...acc,
-          [key]: payload[key],
-        }
+            ...acc,
+            [key]: payload[key],
+          }
         : acc,
     {},
   )
@@ -41,9 +41,9 @@ export const getFields = (fields: Payload) =>
       R.isNil(value)
         ? acc
         : {
-          ...acc,
-          [key]: value,
-        },
+            ...acc,
+            [key]: value,
+          },
     {},
   )
 
@@ -97,8 +97,8 @@ export const generateCustomDelete = ({ table, clause }: GenerateCustomDelete): Q
   const remove = `
     delete from ${table}
     where ${Object.keys(clause)
-    .map((key, index) => `${key} = $${index + 1}`)
-    .join(' and ')}
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(' and ')}
   `
 
   return {
@@ -157,47 +157,51 @@ interface FindWithCursorPayload<T> {
 
 // @ts-ignore
 export function createORM<T, Raw>({
-                                    tableName,
-                                    debug = false,
-                                    entityMapperClass,
-                                  }: {
+  tableName,
+  debug = false,
+  entityMapperClass,
+}: {
   tableName: string
   debug?: boolean
   entityMapperClass: EntityMapperClass<T, Raw>
 }) {
   type PgResult = QueryResult<T>
 
-
-
   const insert = (values: Payload) => {
     const query = generatePgInsert({ payload: values, table: tableName })
 
-    return Future.tryP<never, PgResult>(() => pgsql.query(query.text, query.values))
-      .map(debug ? R.tap<PgResult>(console.log) : R.identity)
-      // @ts-ignore
-      .map(value => new entityMapperClass(value.rows[0]))
+    return (
+      Future.tryP<never, PgResult>(() => pgsql.query(query.text, query.values))
+        .map(debug ? R.tap<PgResult>(console.log) : R.identity)
+        // @ts-ignore
+        .map(value => new entityMapperClass(value.rows[0]))
+    )
   }
 
   const count = (values: Payload): Future.FutureInstance<never, number> => {
     const query = getWhereClauseFromObject({ payload: values })
 
-    return Future.tryP<never, PgResult>(() =>
-      pgsql.query(`select count(*) from ${tableName} ${query.length !== 0 ? `where ${query}` : ''}`),
+    return (
+      Future.tryP<never, PgResult>(() =>
+        pgsql.query(`select count(*) from ${tableName} ${query.length !== 0 ? `where ${query}` : ''}`),
+      )
+        .map(debug ? R.tap<PgResult>(console.log) : R.identity)
+        // @ts-ignore
+        .map(value => value.rows[0].count)
+        .map(Number)
     )
-      .map(debug ? R.tap<PgResult>(console.log) : R.identity)
-      // @ts-ignore
-      .map(value => value.rows[0].count)
-      .map(Number)
   }
 
   const countWithRawQuery = (sql: string): Future.FutureInstance<never, number> => {
     const query = `select count(*) from ${tableName} ${sql.length !== 0 ? `where ${sql}` : ''}`
 
-    return Future.tryP<never, PgResult>(() => pgsql.query(query))
-      .map(debug ? R.tap<PgResult>(console.log) : R.identity)
-      // @ts-ignore
-      .map(value => value.rows[0].count)
-      .map(Number)
+    return (
+      Future.tryP<never, PgResult>(() => pgsql.query(query))
+        .map(debug ? R.tap<PgResult>(console.log) : R.identity)
+        // @ts-ignore
+        .map(value => value.rows[0].count)
+        .map(Number)
+    )
   }
 
   const mapResults = (result: Future.FutureInstance<never, PgResult>) =>
@@ -207,30 +211,36 @@ export function createORM<T, Raw>({
   const find = (payload: Payload) => {
     const clause = getWhereClauseFromObject({ payload })
 
-    return Future.tryP<never, PgResult>(() =>
-      pgsql.query(`select * from ${tableName} ${clause.length !== 0 ? `where ${clause}` : ''}`),
+    return (
+      Future.tryP<never, PgResult>(() =>
+        pgsql.query(`select * from ${tableName} ${clause.length !== 0 ? `where ${clause}` : ''}`),
+      )
+        .map(value => value.rows)
+        // @ts-ignore
+        .map(R.map(data => new entityMapperClass(data)))
     )
-      .map(value => value.rows)
-      // @ts-ignore
-      .map(R.map(data => new entityMapperClass(data)))
   }
 
   const findWithRawQuery = (rawWhere: string) => {
-    return Future.tryP<never, PgResult>(() => pgsql.query(`select * from ${tableName} where ${rawWhere}`))
-      .map(value => value.rows)
-      // @ts-ignore
-      .map(R.map(data => new entityMapperClass(data)))
+    return (
+      Future.tryP<never, PgResult>(() => pgsql.query(`select * from ${tableName} where ${rawWhere}`))
+        .map(value => value.rows)
+        // @ts-ignore
+        .map(R.map(data => new entityMapperClass(data)))
+    )
   }
 
   const findOne = (payload: Partial<T>) => {
     const clause = getWhereClauseFromObject({ payload })
 
-    return Future.tryP<never, PgResult>(() =>
-      pgsql.query(`select * from ${tableName} ${clause.length !== 0 ? `where ${clause}` : ''}`),
+    return (
+      Future.tryP<never, PgResult>(() =>
+        pgsql.query(`select * from ${tableName} ${clause.length !== 0 ? `where ${clause}` : ''}`),
+      )
+        .map(value => value.rows[0] || null)
+        // @ts-ignore
+        .map(data => (data ? new entityMapperClass(data) : null))
     )
-      .map(value => value.rows[0] || null)
-      // @ts-ignore
-      .map(data => (data ? new entityMapperClass(data) : null))
   }
 
   const update = (clause: Payload, values: Payload) => {
@@ -246,13 +256,13 @@ export function createORM<T, Raw>({
    * */
   const MAX_FIRST = 100
   const findWithCursor = async ({
-                                  query = '',
-                                  after,
-                                  before = null,
-                                  first = MAX_FIRST,
-                                  last = null,
-                                  orderByColumn,
-                                }: FindWithCursorInput): Promise<FindWithCursorPayload<T>> => {
+    query = '',
+    after,
+    before = null,
+    first = MAX_FIRST,
+    last = null,
+    orderByColumn,
+  }: FindWithCursorInput): Promise<FindWithCursorPayload<T>> => {
     const order = R.is(Number, last) ? 'asc' : 'desc'
     const offset = Number(fromBase64(after || before || toBase64('0')))
     const limit = Math.min(MAX_FIRST, first || last || MAX_FIRST)
@@ -269,7 +279,7 @@ export function createORM<T, Raw>({
 
     const whereClause = query ? `where ${query}` : ''
     const paginationClause = `order by ${orderByColumn ||
-    'created_at'} ${order} offset ${offset} rows fetch next ${limit} rows only`
+      'created_at'} ${order} offset ${offset} rows fetch next ${limit} rows only`
     const [countErr, countResult] = await eres<PgResult, Error>(
       pgsql.query(`select count(${orderByColumn || 'id'}) from ${tableName} ${whereClause}`),
     )
