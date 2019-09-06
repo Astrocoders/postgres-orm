@@ -1,11 +1,27 @@
 {
   "name": "@astrocoders/postgres-orm",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "PostgreSQL ORM",
+  "main": "lib/index.js",
+  "repository": "https://github.com/Astrocoders/postgres-orm",
+  "author": "Astrocoders <lucas@astrocoders.com>",
+  "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepare": "yarn build",
+    "build": "tsc"
   },
-  "author": "",
-  "license": "MIT"
+  "devDependencies": {
+    "@types/lodash": "^4.14.116",
+    "@types/node": "^12.6.8",
+    "@types/pg": "^7.4.14",
+    "@types/ramda": "^0.26.18",
+    "typescript": "^3.5.3",
+    "eres": "Astrocoders/eres",
+    "fluture": "^11.0.2",
+    "lodash": "^4.17.11",
+    "ramda": "^0.26.1"
+  },
+  "peerDependencies": {
+    "pg": "^7.12.1"
+  }
 }
