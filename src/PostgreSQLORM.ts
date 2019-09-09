@@ -164,7 +164,7 @@ export function createORM<T, Raw>({
   tableName: string
   debug?: boolean
   entityMapperClass: EntityMapperClass<T, Raw>
-  client: pg.PoolClient
+  client: pg.Pool
 }) {
   type PgResult = QueryResult<T>
 
