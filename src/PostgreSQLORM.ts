@@ -193,18 +193,6 @@ export function createORM<T, Raw>({
     )
   }
 
-  const countWithRawWhere = (sql: string): Future.FutureInstance<never, number> => {
-    const query = `select count(*) from ${tableName} ${sql.length !== 0 ? `where ${sql}` : ''}`
-
-    return (
-      Future.tryP<never, PgResult>(() => client.query(query))
-        .map(debug ? R.tap<PgResult>(console.log) : R.identity)
-        // @ts-ignore
-        .map(value => value.rows[0].count)
-        .map(Number)
-    )
-  }
-
   const countWithRawQuery = (sql: string): Future.FutureInstance<never, number> => {
     const query = `select count(*) from ${tableName} ${sql.length !== 0 ? sql : ''}`
 
@@ -361,7 +349,6 @@ export function createORM<T, Raw>({
     findWithCursor,
     count: (values: Partial<T>) => count(sanitizePayload(entityMapperClass.toRaw(values))),
     countWithRawQuery,
-    countWithRawWhere,
     update: (query: Partial<T>, payload: Partial<T>) =>
       update(sanitizePayload(entityMapperClass.toRaw(query)), sanitizePayload(entityMapperClass.toRaw(payload))),
     mapResults,
