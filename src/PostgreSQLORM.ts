@@ -194,7 +194,7 @@ export function createORM<T, Raw>({
   }
 
   const countWithRawQuery = (sql: string): Future.FutureInstance<never, number> => {
-    const query = `select count(*) from ${tableName} ${sql.length !== 0 ? `where ${sql}` : ''}`
+    const query = `select count(*) from ${tableName} ${sql.length !== 0 ? sql : ''}`
 
     return (
       Future.tryP<never, PgResult>(() => client.query(query))

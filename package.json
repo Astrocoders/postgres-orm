@@ -1,6 +1,6 @@
 {
   "name": "@astrocoders/postgres-orm",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "PostgreSQL ORM",
   "main": "lib/index.js",
   "repository": "https://github.com/Astrocoders/postgres-orm",
