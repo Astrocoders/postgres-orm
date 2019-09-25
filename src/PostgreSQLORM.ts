@@ -83,7 +83,7 @@ export const getWhereClauseFromObject = ({ payload }: { payload: Payload }): str
   R.pipe(
     R.keys,
     R.filter(key => payload[key] !== undefined),
-    R.map(key => `${key} = '${payload[key]}'`),
+    R.map(key => (payload[key] !== null ? `${key} = '${payload[key]}'` : `${key} IS NULL`)),
     R.join(' and '),
   )(payload)
 
