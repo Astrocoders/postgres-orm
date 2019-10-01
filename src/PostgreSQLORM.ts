@@ -367,7 +367,7 @@ export function createORM<T, Raw>({
     findWithCursor,
     count: (values: Partial<T>) => count(sanitizePayload(entityMapperClass.toRaw(values))),
     countWithRawQuery,
-    sumWithRawQuery
+    sumWithRawQuery,
     update: (query: Partial<T>, payload: Partial<T>) =>
       update(sanitizePayload(entityMapperClass.toRaw(query)), sanitizePayload(entityMapperClass.toRaw(payload))),
     mapResults,
