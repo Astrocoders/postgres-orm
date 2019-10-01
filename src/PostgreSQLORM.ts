@@ -237,6 +237,18 @@ export function createORM<T, Raw>({
     )
   }
 
+  const sumWithRawQuery = (sql: string, field: string): Future.FutureInstance<never, number> => {
+    const query = `select sum(${field}) from ${tableName} ${sql.length !== 0 ? sql : ''}`
+
+    return (
+      Future.tryP<never, PgResult>(() => client.query(query))
+        .map(debug ? R.tap<PgResult>(console.log) : R.identity)
+        // @ts-ignore
+        .map(value => value.rows[0].sum)
+        .map(Number)
+    )
+  }
+
   const findOne = (payload: Partial<T>) => {
     const clause = getWhereClauseFromObject({ payload })
 
@@ -355,6 +367,7 @@ export function createORM<T, Raw>({
     findWithCursor,
     count: (values: Partial<T>) => count(sanitizePayload(entityMapperClass.toRaw(values))),
     countWithRawQuery,
+    sumWithRawQuery
     update: (query: Partial<T>, payload: Partial<T>) =>
       update(sanitizePayload(entityMapperClass.toRaw(query)), sanitizePayload(entityMapperClass.toRaw(payload))),
     mapResults,
