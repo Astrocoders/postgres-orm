@@ -130,7 +130,7 @@ export const generatePgInsert = ({ payload, table }): Query => {
 }
 
 interface FindWithCursorInput {
-  orderByColumn: string
+  orderByColumn?: string | null
   query?: string | null
   first?: number | null
   last?: number | null
