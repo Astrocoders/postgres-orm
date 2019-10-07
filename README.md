@@ -6,11 +6,12 @@
 ### Usage
 
 ```js
-import PostgreSQLORM from '@Astrocoders/postgres-orm'
+import createORM from '@Astrocoders/postgres-orm'
 import * as pg from 'postgres'
 
 export const pool = new pg.Pool(config)
-export const connect = () => pool.connect().then(() => console.log('Connection successful'))
+export const connect = () =>
+  pool.connect().then(() => console.log('Connection successful'))
 
-const orm = createORM({ entityMapperClass, tableName, debug, client: pool, })
+const orm = createORM({ entityMapperClass, tableName, debug, client: pool })
 ```
