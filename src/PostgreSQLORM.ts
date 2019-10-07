@@ -244,7 +244,7 @@ export function createORM<T, Raw>({
       Future.tryP<never, PgResult>(() => client.query(query))
         .map(debug ? R.tap<PgResult>(console.log) : R.identity)
         // @ts-ignore
-        .map(value => value.rows[0].sum)
+        .map(value => (value.rows[0] ? value.rows[0].sum : 0))
         .map(Number)
     )
   }
